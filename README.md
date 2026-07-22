@@ -90,7 +90,9 @@ python -m pip install -e .
 ```
 
 (dev extras for testing: `python -m pip install -e ".[dev]"` then `pytest`).
-Only runtime dependency is matplotlib; everything else is stdlib.
+The core tool is stdlib-only. The optional `--plot` flag needs matplotlib,
+which is an optional extra: `pip install carbonmix[plot]` (or
+`python -m pip install -e ".[plot]"` from a checkout).
 
 ## Run
 
