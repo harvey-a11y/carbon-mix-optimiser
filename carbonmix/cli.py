@@ -206,7 +206,7 @@ def main(argv: list[str] | None = None) -> int:
         f"min binder {DURABILITY_LIMITS[args.exposure]['min_binder']:.0f} kg/m3)"
     )
     print(
-        f"Grid: {result.n_evaluated} combinations evaluated, "
+        f"Grid: {result.n_enumerated} combinations enumerated, "
         f"{len(result.feasible)} feasible"
     )
     print()

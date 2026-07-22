@@ -108,7 +108,7 @@ carbonmix 0.1.0 - low-carbon concrete mix screening
 Screening estimates only - indicative data, simplified models. NOT a substitute for BS 8500 / EN 206 mix design or trial mixes.
 
 Target: C32/40 (fck >= 32 MPa), exposure XC3_XC4 (max w/c_eff 0.55, min binder 300 kg/m3)
-Grid: 57040 combinations evaluated, 2688 feasible
+Grid: 57040 combinations enumerated, 2688 feasible
 
 Top 10 mixes by embodied carbon:
   #   binder   GGBS    FA    w/c  w/c_eff    fck  kgCO2e/m3   saving

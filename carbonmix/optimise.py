@@ -72,7 +72,7 @@ class OptimisationResult:
     exposure: str
     feasible: list[MixCandidate]          # sorted by carbon, ascending
     baseline: MixCandidate | None          # lowest-carbon CEM I-only feasible mix
-    n_evaluated: int
+    n_enumerated: int                      # grid points enumerated (within caps)
 
     @property
     def best(self) -> MixCandidate | None:
@@ -104,7 +104,7 @@ def grid_search(
 
     feasible: list[MixCandidate] = []
     baseline: MixCandidate | None = None
-    n_evaluated = 0
+    n_enumerated = 0
 
     for ggbs_frac in GGBS_GRID:
         for fa_frac in FA_GRID:
@@ -120,7 +120,10 @@ def grid_search(
                 fck = characteristic_strength(fcm)
                 strength_ok = fck >= target_fck - 1e-9
                 for binder in BINDER_GRID:
-                    n_evaluated += 1
+                    # Counts every grid point enumerated within the
+                    # replacement caps, including points skipped once
+                    # strength has already failed for this (wc, split).
+                    n_enumerated += 1
                     if not strength_ok:
                         continue
                     if not meets_durability(exposure, wc_eff, binder):
@@ -155,12 +158,19 @@ def grid_search(
             m.masses["water"], m.masses["cem1"], m.masses["ggbs"],
             m.masses["fly_ash"], k_ggbs=k_ggbs, k_fa=k_fa,
         )
-        assert abs(check - m.wc_eff) < 1e-9
+        if abs(check - m.wc_eff) >= 1e-9:
+            raise RuntimeError(
+                "w/c_eff consistency check failed for the best mix: "
+                f"grid-search value {m.wc_eff!r} != effective_wc() "
+                f"recomputation {check!r}. The two k-value formulations "
+                "have drifted apart; check effective_wc() against the "
+                "eff_binder_frac maths in grid_search()."
+            )
 
     return OptimisationResult(
         strength_class=strength_class,
         exposure=exposure,
         feasible=feasible,
         baseline=baseline,
-        n_evaluated=n_evaluated,
+        n_enumerated=n_enumerated,
     )
