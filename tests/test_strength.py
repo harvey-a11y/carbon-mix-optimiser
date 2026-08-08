@@ -1,5 +1,7 @@
 """Tests for the Abrams-type strength model and k-value maths."""
 
+from itertools import pairwise
+
 import pytest
 
 from carbonmix.strength import (

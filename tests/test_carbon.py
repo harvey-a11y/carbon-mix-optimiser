@@ -1,5 +1,7 @@
 """Tests for the mass balance and embodied carbon model."""
 
+from itertools import pairwise
+
 import pytest
 
 from carbonmix.carbon import embodied_carbon, mix_carbon, mix_proportions

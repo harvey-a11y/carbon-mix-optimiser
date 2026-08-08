@@ -12,7 +12,7 @@ def make_mix(**overrides):
     values = {
         "binder": 300.0, "wc": 0.35, "ggbs_frac": 0.50, "fa_frac": 0.0,
         "wc_eff": 0.437, "fcm": 40.2, "fck": 32.2, "carbon": 158.8, "masses": {},
-    )
+    }
     values.update(overrides)
     return MixCandidate(**values)
 
