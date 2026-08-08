@@ -75,7 +75,9 @@ class SensitivityResult:
     def mean(self) -> float | None:
         return statistics.fmean(self.savings) if self.savings else None
 
-    def interval(self, lower: float = 5.0, upper: float = 95.0) -> tuple[float, float] | None:
+    def interval(
+        self, lower: float = 5.0, upper: float = 95.0
+    ) -> tuple[float, float] | None:
         """Percentile interval of the saving, in percent."""
         if not self.savings:
             return None

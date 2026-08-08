@@ -117,5 +117,7 @@ def parse_distances(spec: str | None) -> dict[str, float]:
         try:
             out[k] = float(v)
         except ValueError:
-            raise ValueError(f"distance for {k!r} must be a number, got {v!r}") from None
+            raise ValueError(
+                f"distance for {k!r} must be a number, got {v!r}"
+            ) from None
     return out

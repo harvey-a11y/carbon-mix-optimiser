@@ -79,7 +79,10 @@ def test_default_factor_is_used():
         ("", {}),
         (None, {}),
         ("cem1=80", {"cem1": 80.0}),
-        ("cem1=80,ggbs=300,aggregate=40", {"cem1": 80.0, "ggbs": 300.0, "aggregate": 40.0}),
+        (
+            "cem1=80,ggbs=300,aggregate=40",
+            {"cem1": 80.0, "ggbs": 300.0, "aggregate": 40.0},
+        ),
         (" cem1 = 80 , ggbs=300 ", {"cem1": 80.0, "ggbs": 300.0}),
     ],
 )
