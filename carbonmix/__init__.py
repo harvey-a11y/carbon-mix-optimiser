@@ -1,4 +1,4 @@
-"""carbonmix — low-carbon concrete mix SCREENING tool.
+"""carbonmix -- low-carbon concrete mix SCREENING tool.
 
 Estimates 28-day strength with a simplified Abrams-type model (EN 206
 k-value binder weighting), screens candidate mixes against indicative
@@ -19,8 +19,11 @@ from carbonmix.strength import (
 from carbonmix.durability import meets_durability, within_replacement_caps
 from carbonmix.carbon import embodied_carbon, mix_proportions
 from carbonmix.optimise import MixCandidate, OptimisationResult, grid_search
+from carbonmix.earlyage import EarlyAgeNote, assess, early_ratio
+from carbonmix.transport import transport_carbon, parse_distances
+from carbonmix.sensitivity import SensitivityResult, run as sensitivity_run
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "STRENGTH_CLASSES",
@@ -34,5 +37,12 @@ __all__ = [
     "MixCandidate",
     "OptimisationResult",
     "grid_search",
+    "EarlyAgeNote",
+    "assess",
+    "early_ratio",
+    "transport_carbon",
+    "parse_distances",
+    "SensitivityResult",
+    "sensitivity_run",
     "__version__",
 ]

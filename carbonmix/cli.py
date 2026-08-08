@@ -12,7 +12,13 @@ import sys
 
 from carbonmix import __version__
 from carbonmix.data.durability_limits import DURABILITY_LIMITS
+from carbonmix.earlyage import assess as assess_early_age
 from carbonmix.optimise import OptimisationResult, grid_search
+from carbonmix.transport import (
+    DEFAULT_TRANSPORT_FACTOR,
+    parse_distances,
+    transport_carbon,
+)
 from carbonmix.strength import STRENGTH_CLASSES
 
 DISCLAIMER = (
@@ -67,6 +73,34 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="PATH",
         default=None,
         help="save a scatter plot (embodied carbon vs fck) to this PNG path",
+    )
+    parser.add_argument(
+        "--transport",
+        metavar="SPEC",
+        default=None,
+        help=(
+            "optional module A4 haul distances, e.g. "
+            "'cem1=80,ggbs=300,aggregate=40' (km, one way). "
+            "Omit and the A1-A3 result is unchanged."
+        ),
+    )
+    parser.add_argument(
+        "--transport-factor",
+        type=float,
+        default=DEFAULT_TRANSPORT_FACTOR,
+        metavar="F",
+        help=f"kgCO2e per tonne-km (default {DEFAULT_TRANSPORT_FACTOR})",
+    )
+    parser.add_argument(
+        "--sensitivity",
+        type=int,
+        metavar="N",
+        default=0,
+        help=(
+            "run N Monte Carlo draws over the carbon factors and Abrams "
+            "constants and report the saving as a range instead of a "
+            "point estimate. 200 is a reasonable number."
+        ),
     )
     parser.add_argument(
         "--version", action="version", version=f"carbonmix {__version__}"
@@ -236,6 +270,63 @@ def main(argv: list[str] | None = None) -> int:
             )
     else:
         print("No CEM I-only mix is feasible; no baseline saving reported.")
+
+    # --- early-age flag on the recommended mix -------------------------------
+    best = result.best
+    if best is not None:
+        note = assess_early_age(best.fck, best.ggbs_frac, best.fa_frac)
+        print()
+        print(note.message)
+
+    # --- optional module A4 transport ----------------------------------------
+    if args.transport:
+        try:
+            distances = parse_distances(args.transport)
+        except ValueError as exc:
+            print(f"error: --transport: {exc}", file=sys.stderr)
+            return 2
+        print()
+        print(
+            f"Module A4 transport at {args.transport_factor} kgCO2e/tonne-km, "
+            f"distances {distances}:"
+        )
+        rows = []
+        for label, mix in (("best", best), ("baseline", result.baseline)):
+            if mix is None:
+                continue
+            a4 = transport_carbon(mix.masses, distances, args.transport_factor)
+            rows.append((label, mix.carbon, a4, mix.carbon + a4))
+        for label, a13, a4, tot in rows:
+            print(
+                f"  {label:<9} A1-A3 {a13:7.1f}  + A4 {a4:6.1f}  "
+                f"= A1-A4 {tot:7.1f} kgCO2e/m3"
+            )
+        if len(rows) == 2:
+            (_, b13, b4, btot) = rows[0]
+            (_, c13, c4, ctot) = rows[1]
+            s13 = 100.0 * (c13 - b13) / c13
+            s14 = 100.0 * (ctot - btot) / ctot
+            print(
+                f"  saving A1-A3 {s13:.1f}%  ->  saving A1-A4 {s14:.1f}%"
+            )
+
+    # --- optional Monte Carlo on the headline saving -------------------------
+    if args.sensitivity:
+        from carbonmix.sensitivity import run as run_sensitivity
+
+        print()
+        print(
+            f"Monte Carlo over carbon factors and Abrams constants, "
+            f"{args.sensitivity} draws:"
+        )
+        sens = run_sensitivity(
+            args.strength_class, args.exposure, draws=args.sensitivity
+        )
+        print("  " + sens.summary())
+        print(
+            "  The interval is the honest headline. The point estimate above "
+            "carries more precision than the inputs support."
+        )
 
     if args.plot:
         save_plot(result, args.plot)

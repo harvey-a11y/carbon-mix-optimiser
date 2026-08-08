@@ -1,4 +1,4 @@
-# carbonmix — low-carbon concrete mix screening tool
+# carbonmix -- low-carbon concrete mix screening tool
 
 Ranks candidate concrete mixes by embodied carbon (kgCO2e/m3) for a target
 strength class and exposure class, using a simplified strength model, an
@@ -10,6 +10,51 @@ factors. Built as a civil engineering portfolio project.
 > chartered engineer's judgement. Every data table in it is indicative and
 > must be refreshed from current sources before any number is quoted.
 
+## What is new in 0.2.0
+
+Three additions, all of which exist because the original single headline number
+("43.9% saving") claimed more precision than the inputs support.
+
+### 1. Uncertainty on the headline saving  (`carbonmix.sensitivity`)
+
+```
+python -m carbonmix --class C32/40 --exposure XC3_XC4 --sensitivity 200
+```
+
+Monte Carlo over the carbon factors and the (uncalibrated) Abrams constants,
+reporting a median and a 90% interval instead of one figure.
+
+**The result is the most useful thing in this repository.** Varying only the
+carbon factors moves the saving by about 5 percentage points. Varying only the
+strength calibration moves it by about 55. In other words the headline number is
+dominated by the strength model, not by the carbon data, and refining the carbon
+factors would be close to wasted effort while K1 and K2 remain uncalibrated.
+
+### 2. Module A4 transport  (`carbonmix.transport`)
+
+```
+python -m carbonmix --class C32/40 --exposure XC3_XC4 --transport cem1=80,ggbs=300,aggregate=40
+```
+
+Optional and defaults to zero, so the A1-A3 headline is unchanged unless you ask
+for it. It exists because GGBS usually travels further than cement in the UK, and
+a tool that recommends 50% GGBS without ever mentioning haulage is answering an
+easier question than the one that matters on site.
+
+### 3. Early-age strength flagging  (`carbonmix.earlyage`)
+
+High-GGBS mixes gain strength slowly. The tool now says so, every time it
+recommends one, because striking times and cold-weather working are governed by
+early strength and not by the 28-day figure. Indicative only: it will not give you
+a striking time and it says so.
+
+### A second implementation
+
+`tools/verify_model.js` is an independent Node re-implementation of the model,
+written from the module docstrings rather than translated from the Python. It
+reproduces the deterministic 43.9% figure exactly. If the two ever disagree, one
+of them has a bug.
+
 ## What it does
 
 Given a target strength class (e.g. C32/40) and an exposure class (e.g.
@@ -17,10 +62,10 @@ XC3_XC4), it grid-searches candidate mixes over:
 
 | Variable | Range | Step |
 |---|---|---|
-| Total binder | 260–450 kg/m3 | 10 |
-| Free w/c | 0.35–0.65 | 0.01 |
-| GGBS (% of binder) | 0–70% | 5% |
-| Fly ash (% of binder) | 0–35% | 5% |
+| Total binder | 260-450 kg/m3 | 10 |
+| Free w/c | 0.35-0.65 | 0.01 |
+| GGBS (% of binder) | 0-70% | 5% |
+| Fly ash (% of binder) | 0-35% | 5% |
 
 (combined GGBS + fly ash capped at 70% of binder), keeps the mixes that
 meet both the strength target and the durability limits, ranks them by
@@ -29,7 +74,7 @@ CEM I-only baseline (the lowest-carbon feasible mix with no replacement).
 
 ## The model
 
-**Strength** — simplified Abrams-type law for mean 28-day strength:
+**Strength** -- simplified Abrams-type law for mean 28-day strength:
 
 ```
 fcm = K1 / K2^(w/c_eff)        (defaults K1 = 110 MPa, K2 = 10)
@@ -39,27 +84,27 @@ which gives fcm ≈ 34.8 MPa at w/c_eff = 0.50. The effective water/binder
 ratio uses the EN 206 k-value concept:
 
 ```
-w/c_eff = water / (cement + 0.6·GGBS + 0.4·fly ash)
+w/c_eff = water / (cement + 0.6-GGBS + 0.4-fly ash)
 ```
 
 (k-values configurable). Characteristic strength takes the EN 1992-style
 margin `fck = fcm − 8 MPa`, and strength classes map to required
-characteristic **cylinder** strength: C25/30 → 25, C28/35 → 28,
-C32/40 → 32, C35/45 → 35, C40/50 → 40 MPa.
+characteristic **cylinder** strength: C25/30 -> 25, C28/35 -> 28,
+C32/40 -> 32, C35/45 -> 35, C40/50 -> 40 MPa.
 
-**Durability** — indicative BS 8500-style limits per exposure class
-(max effective w/c, min binder content), e.g. XC3_XC4: w/c ≤ 0.55 and
-binder ≥ 300 kg/m3. See `carbonmix/data/durability_limits.py` — the
+**Durability** -- indicative BS 8500-style limits per exposure class
+(max effective w/c, min binder content), e.g. XC3_XC4: w/c <= 0.55 and
+binder >= 300 kg/m3. See `carbonmix/data/durability_limits.py` -- the
 values are marked "indicative, verify against current BS 8500-1
 Table A.4/A.5" and are deliberately a *simplification*.
 
-**Embodied carbon** — mass balance for 1 m3: binder split by replacement
+**Embodied carbon** -- mass balance for 1 m3: binder split by replacement
 fractions, water = w/c × binder, 2% air, and aggregate filling the
 remaining absolute volume (particle densities: cement 3150, GGBS 2900,
 fly ash 2300, water 1000, aggregate 2650 kg/m3; aggregate split 40% sand /
 60% coarse). Carbon = Σ massᵢ × factorᵢ with indicative cradle-to-gate
 factors (kgCO2e/kg): CEM I 0.91, GGBS 0.08, fly ash 0.01, aggregates
-0.005, water 0.0003 — order-of-magnitude values in the spirit of the ICE
+0.005, water 0.0003 -- order-of-magnitude values in the spirit of the ICE
 database v3; refresh from the current ICE DB or supplier EPDs.
 
 ## Assumptions and limitations (read these)
@@ -70,7 +115,7 @@ database v3; refresh from the current ICE DB or supplier EPDs.
   strength.
 - Durability limits are indicative screening values, not a transcription
   of BS 8500-1; cover, cement/combination designations, intended working
-  life, aggregate size and freeze–thaw (XF) classes are **not** modelled.
+  life, aggregate size and freeze-thaw (XF) classes are **not** modelled.
 - Strength classes are checked on characteristic *cylinder* strength with
   a flat 8 MPa margin; no statistical quality-control model.
 - Carbon factors are cradle-to-gate materials only: no transport,
@@ -79,11 +124,11 @@ database v3; refresh from the current ICE DB or supplier EPDs.
 - No workability/rheology model: a w/c of 0.35 without superplasticiser is
   not placeable; admixtures are outside scope.
 - Mass balance assumes saturated-surface-dry aggregate and fixed 2% air.
-- Grid search only — answers are only as fine as the grid steps.
+- Grid search only -- answers are only as fine as the grid steps.
 
 ## Install
 
-Python ≥ 3.11. From the repository root:
+Python >= 3.11. From the repository root:
 
 ```
 python -m pip install -e .
@@ -138,7 +183,7 @@ CEM I baseline highlighted.
 
 The headline result is the textbook one: for C32/40 in XC3_XC4, a
 50% GGBS blend at low w/c screens at roughly **44% less embodied carbon**
-than a plain CEM I mix — with the honest caveat that the k-value approach
+than a plain CEM I mix -- with the honest caveat that the k-value approach
 penalises high-replacement strength, so real GGBS mixes (which gain
 strength beyond 28 days) may do even better than this model suggests.
 
@@ -167,7 +212,7 @@ ordering, baseline and saving for C32/40 XC3_XC4.
 
 ## Roadmap
 
-- XF (freeze–thaw) exposure classes and air-entrainment handling
+- XF (freeze-thaw) exposure classes and air-entrainment handling
 - Cost data alongside carbon (Pareto front: cost vs CO2e)
 - Limestone (CEM II/A-L) and calcined-clay (LC3) binder options
 - Age-dependent strength for GGBS mixes (28 vs 56-day compliance)
@@ -176,4 +221,4 @@ ordering, baseline and saving for C32/40 XC3_XC4.
 
 ## License
 
-MIT — see `LICENSE`. Copyright (c) 2026 Harvey Sohal.
+MIT -- see `LICENSE`. Copyright (c) 2026 Harvey Sohal.
