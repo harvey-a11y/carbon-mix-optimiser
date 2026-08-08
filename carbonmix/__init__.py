@@ -10,39 +10,40 @@ for mix design to BS 8500 / EN 206, trial mixes, or a chartered
 engineer's judgement.
 """
 
+from carbonmix.carbon import embodied_carbon, mix_proportions
+from carbonmix.durability import meets_durability, within_replacement_caps
+from carbonmix.earlyage import EarlyAgeNote, assess, early_ratio
+from carbonmix.optimise import MixCandidate, OptimisationResult, grid_search
+from carbonmix.sensitivity import SensitivityResult
+from carbonmix.sensitivity import run as sensitivity_run
 from carbonmix.strength import (
     STRENGTH_CLASSES,
     characteristic_strength,
     effective_wc,
     mean_strength,
 )
-from carbonmix.durability import meets_durability, within_replacement_caps
-from carbonmix.carbon import embodied_carbon, mix_proportions
-from carbonmix.optimise import MixCandidate, OptimisationResult, grid_search
-from carbonmix.earlyage import EarlyAgeNote, assess, early_ratio
-from carbonmix.transport import transport_carbon, parse_distances
-from carbonmix.sensitivity import SensitivityResult, run as sensitivity_run
+from carbonmix.transport import parse_distances, transport_carbon
 
 __version__ = "0.2.0"
 
 __all__ = [
-    "STRENGTH_CLASSES",
-    "characteristic_strength",
-    "effective_wc",
-    "mean_strength",
-    "meets_durability",
-    "within_replacement_caps",
-    "embodied_carbon",
-    "mix_proportions",
+    "EarlyAgeNote",
     "MixCandidate",
     "OptimisationResult",
-    "grid_search",
-    "EarlyAgeNote",
-    "assess",
-    "early_ratio",
-    "transport_carbon",
-    "parse_distances",
+    "STRENGTH_CLASSES",
     "SensitivityResult",
-    "sensitivity_run",
     "__version__",
+    "assess",
+    "characteristic_strength",
+    "early_ratio",
+    "effective_wc",
+    "embodied_carbon",
+    "grid_search",
+    "mean_strength",
+    "meets_durability",
+    "mix_proportions",
+    "parse_distances",
+    "sensitivity_run",
+    "transport_carbon",
+    "within_replacement_caps",
 ]

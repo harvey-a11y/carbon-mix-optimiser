@@ -13,7 +13,7 @@ from carbonmix.strength import (
 
 def test_strength_decreases_with_wc():
     strengths = [mean_strength(wc) for wc in (0.35, 0.45, 0.55, 0.65)]
-    assert all(a > b for a, b in zip(strengths, strengths[1:]))
+    assert all(a > b for a, b in pairwise(strengths))
 
 
 def test_default_constants_give_sane_strength_at_wc_050():

@@ -37,7 +37,6 @@ from dataclasses import dataclass, field
 
 from carbonmix.data import carbon_factors as cf_module
 from carbonmix.optimise import grid_search
-from carbonmix.strength import DEFAULT_K1, DEFAULT_K2
 
 # Plausible ranges. Carbon factors are kgCO2e/kg and bracket the spread
 # seen across ICE v3-era entries, supplier EPDs and allocation choices.

@@ -11,7 +11,7 @@ def test_carbon_decreases_as_ggbs_rises():
         mix_carbon(binder=300, wc=0.5, ggbs_frac=g)
         for g in (0.0, 0.2, 0.5, 0.7)
     ]
-    assert all(a > b for a, b in zip(carbons, carbons[1:]))
+    assert all(a > b for a, b in pairwise(carbons))
 
 
 def test_fly_ash_also_cuts_carbon():

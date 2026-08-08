@@ -23,7 +23,10 @@ dependencies = []
 
 [project.optional-dependencies]
 plot = ["matplotlib>=3.7"]
-dev = ["pytest>=7", "ruff"]
+# ruff is PINNED deliberately. It was unpinned, and a ruff release added rules
+# (RUF022, RUF007, RUF059, C408, SIM102) that turned a green CI red with no code
+# change on 8 Aug 2026. Bump this on purpose, not by surprise.
+dev = ["pytest>=7", "ruff==0.14.6"]
 
 [project.scripts]
 carbonmix = "carbonmix.cli:main"

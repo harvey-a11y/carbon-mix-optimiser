@@ -14,12 +14,12 @@ from carbonmix import __version__
 from carbonmix.data.durability_limits import DURABILITY_LIMITS
 from carbonmix.earlyage import assess as assess_early_age
 from carbonmix.optimise import OptimisationResult, grid_search
+from carbonmix.strength import STRENGTH_CLASSES
 from carbonmix.transport import (
     DEFAULT_TRANSPORT_FACTOR,
     parse_distances,
     transport_carbon,
 )
-from carbonmix.strength import STRENGTH_CLASSES
 
 DISCLAIMER = (
     "Screening estimates only - indicative data, simplified models. "
@@ -302,8 +302,8 @@ def main(argv: list[str] | None = None) -> int:
                 f"= A1-A4 {tot:7.1f} kgCO2e/m3"
             )
         if len(rows) == 2:
-            (_, b13, b4, btot) = rows[0]
-            (_, c13, c4, ctot) = rows[1]
+            (_, b13, _, btot) = rows[0]
+            (_, c13, _, ctot) = rows[1]
             s13 = 100.0 * (c13 - b13) / c13
             s14 = 100.0 * (ctot - btot) / ctot
             print(

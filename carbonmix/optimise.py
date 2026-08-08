@@ -144,9 +144,10 @@ def grid_search(
                         masses=masses,
                     )
                     feasible.append(candidate)
-                    if ggbs_frac == 0.0 and fa_frac == 0.0:
-                        if baseline is None or candidate.carbon < baseline.carbon:
-                            baseline = candidate
+                    if ggbs_frac == 0.0 and fa_frac == 0.0 and (
+                        baseline is None or candidate.carbon < baseline.carbon
+                    ):
+                        baseline = candidate
 
     feasible.sort(key=lambda m: (m.carbon, m.binder, m.wc))
 
