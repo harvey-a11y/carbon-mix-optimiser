@@ -1,0 +1,241 @@
+% Technical note: how much of the headline carbon saving is real?
+% Compile: pdflatex (MiKTeX at AppData\Local\Programs\MiKTeX\miktex\bin\x64\pdflatex.exe)
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage{parskip}
+
+\definecolor{rulecol}{RGB}{49,86,127}
+\titleformat{\section}{\large\bfseries\color{rulecol}}{\thesection.}{0.5em}{}
+\titlespacing{\section}{0pt}{1.4em}{0.4em}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0pt}{}
+\titlespacing{\subsection}{0pt}{1em}{0.2em}
+\setlist[itemize]{leftmargin=1.3em, itemsep=0.15em, topsep=0.3em}
+\pagestyle{plain}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries How much of a 44\% carbon saving is real?}\\[6pt]
+  {\large Uncertainty in a low-carbon concrete mix screening tool}\\[10pt]
+  {\normalsize Harvey Sohal \quad\textbullet\quad MEng Civil Engineering, Imperial College London}\\[2pt]
+  {\small \href{mailto:harvey@sohal.info}{harvey@sohal.info} \quad\textbullet\quad
+   \href{https://github.com/harvey-a11y/carbon-mix-optimiser}{github.com/harvey-a11y/carbon-mix-optimiser}}\\[2pt]
+  {\small August 2026}
+\end{center}
+
+\vspace{0.6em}
+\hrule
+\vspace{0.8em}
+
+\textbf{Summary.} I built a tool that searches concrete mixes for the lowest embodied carbon
+that still meets a strength class and a durability requirement. For a C32/40 XC3/4 specification
+it found a mix saving 43.9\% against a CEM~I baseline. This note is about whether that number
+deserves a decimal place. It does not. Running the same search a few hundred times over
+plausible ranges for the uncertain inputs gives a median saving of about 41\% and a 90\%
+interval of roughly 8\% to 62\%. More usefully, almost all of that spread comes from one place:
+the strength model, not the carbon data. Refining the carbon factors would move the answer by
+about five percentage points. Calibrating the strength model would move it by about fifty-five.
+
+\section{What the tool does}
+
+Given a target strength class and an exposure class, it enumerates candidate mixes over total
+binder content, free water/cement ratio, and GGBS and fly ash replacement fractions. For each
+one it estimates 28-day strength using an Abrams-type relationship with the EN~206 $k$-value
+weighting for supplementary cementitious materials, screens it against BS~8500-style limits on
+effective w/c and minimum binder content, and computes embodied carbon from a mass balance over
+one cubic metre.
+
+Feasible mixes are ranked by carbon. The tool reports the best one and its saving against the
+lowest-carbon feasible mix that uses CEM~I only.
+
+For C32/40 in exposure class XC3/XC4 it evaluates 57{,}040 combinations and returns:
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+ & \textbf{CEM I baseline} & \textbf{Best mix} \\
+\midrule
+Total binder (kg/m\textsuperscript{3}) & 300 & 300 \\
+GGBS (\% of binder)                    & 0   & 50 \\
+Free w/c                               & 0.43 & 0.35 \\
+Embodied carbon (kgCO\textsubscript{2}e/m\textsuperscript{3}) & 283.1 & 158.8 \\
+\midrule
+\multicolumn{2}{l}{\textbf{Saving}} & \textbf{43.9\%} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Why I stopped trusting that number}
+
+Two of the inputs are, by my own documentation, not calibrated to anything.
+
+The strength model uses $f_{cm} = K_1 / K_2^{\,w/c}$ with $K_1 = 110$ and $K_2 = 10$. Those
+constants give sensible-looking answers for a CEM~I concrete and that is the only justification
+for them. Real strength depends on cement source and strength class, aggregate, admixtures,
+curing and age, none of which the model sees.
+
+The carbon factors are order-of-magnitude figures in the style of the ICE database. Cement is
+around 0.91 kgCO\textsubscript{2}e/kg and GGBS around 0.08, but published values vary with plant,
+fuel mix, transport and, for GGBS especially, with how you allocate the emissions of steelmaking
+between the steel and the slag.
+
+Quoting 43.9\% on top of that is claiming three significant figures from inputs that do not
+support two. So I made the tool report a range instead.
+
+\section{Method}
+
+I sample the six carbon factors and the two Abrams constants from independent uniform ranges,
+re-run the entire grid search for each draw, and collect the resulting saving.
+
+Uniform rather than normal is deliberate. These are ranges of plausible values, not measurement
+errors around a known mean, and assuming a shape would add a second unjustified assumption on
+top of the first. Independence is also an assumption and a questionable one, since cement and
+GGBS share a supply chain and a fuel mix. Both choices are recorded in the code.
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Input} & \textbf{Low} & \textbf{High} \\
+\midrule
+CEM I (kgCO\textsubscript{2}e/kg)   & 0.75  & 0.95 \\
+GGBS                                & 0.05  & 0.13 \\
+Fly ash                             & 0.004 & 0.030 \\
+Aggregate, sand                     & 0.003 & 0.008 \\
+$K_1$ (MPa)                         & 95    & 130 \\
+$K_2$                               & 8     & 13 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Results}
+
+Four hundred draws for C32/40, XC3/XC4. Three of them found no feasible blended mix at all and
+are excluded.
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Median saving        & 41.0\% \\
+Mean saving          & 39.8\% \\
+90\% interval        & 7.6\% to 62.3\% \\
+Full range observed  & 0.0\% to 64.8\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The interval is very wide. A tool that can return anything between no saving at all and roughly
+two thirds, depending on constants nobody has measured, is not yet an instrument for making
+decisions. That is worth saying plainly, because the deterministic answer looks a great deal
+more confident than that.
+
+\subsection{Which input is responsible}
+
+The useful question is not how wide the interval is but which assumption makes it wide. Varying
+one group at a time, holding the other at its default, over 400 draws each:
+
+\begin{center}
+\begin{tabular}{lcr}
+\toprule
+\textbf{Varying} & \textbf{90\% interval} & \textbf{Width} \\
+\midrule
+Carbon factors only       & 40.2\% to 44.8\% & 4.6 points \\
+Strength calibration only & \phantom{0}7.4\% to 63.0\% & 55.6 points \\
+Both                      & \phantom{0}8.6\% to 61.9\% & 53.4 points \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+This is the result that changed how I think about the tool. The carbon factors, which are the
+part everyone argues about and the part I expected to dominate, contribute about five percentage
+points of spread. The uncalibrated strength model contributes about fifty-five, and adding the
+carbon uncertainty on top of it barely widens the interval further.
+
+The mechanism is straightforward once you see it. The strength model does not just shift the
+answer, it changes which mixes are feasible at all. A slightly optimistic calibration lets high
+replacement levels reach the target strength and the saving is large; a slightly pessimistic one
+rules them out and the best feasible mix is barely better than CEM~I. The carbon factors only
+rescale a set of options that has already been chosen.
+
+\subsection{What that implies for the work}
+
+Improving the carbon data would be close to wasted effort while $K_1$ and $K_2$ remain
+uncalibrated. The next useful thing to do with this tool is to fit the strength model to real
+28-day cube data for a small number of mixes, and only then worry about which ICE revision the
+factors came from. That is not what I would have guessed before running it.
+
+\section{Two other things the tool was ignoring}
+
+\subsection{Transport}
+
+The headline is cradle-to-gate, modules A1--A3, which is the standard basis for comparing mixes.
+It has a specific blind spot here: GGBS usually travels further than cement in the UK, because
+supply is concentrated around a small number of works and import terminals while cement plants
+are more widely distributed. A tool that recommends 50\% GGBS and never mentions haulage is
+answering an easier question than the one that matters on site.
+
+Module A4 is now available as an option, defaulting to zero so the A1--A3 figure is unchanged
+unless distances are supplied. At an indicative 0.11 kgCO\textsubscript{2}e per tonne-kilometre:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Scenario} & \textbf{A1--A3} & \textbf{A1--A4} \\
+\midrule
+Both materials local (80 km)            & 43.9\% & 42.1\% \\
+Cement 80 km, GGBS 300 km               & 43.9\% & 40.9\% \\
+Cement 80 km, GGBS 500 km               & 43.9\% & 39.8\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Transport erodes the saving but does not overturn it, which is a smaller effect than I expected
+and worth knowing either way. It is also much smaller than the strength-calibration uncertainty
+above, which puts it in perspective.
+
+\subsection{Early-age strength}
+
+Every calculation in the tool is a 28-day calculation. High-GGBS mixes gain strength slowly, and
+that governs formwork striking, early loading and cold-weather working. The recommended mix here
+is 50\% GGBS, for which an indicative 7-day strength is around 50\% of the 28-day value against
+roughly 65\% for CEM~I.
+
+The tool now says so whenever it recommends a mix above 50\% replacement. It deliberately does
+not offer a striking time, because nothing in it is calibrated well enough to justify one. That
+needs cube or maturity data from the actual mix at the actual temperature.
+
+\section{Verification}
+
+The Python package could not be executed on the machine this was written on, because Python is
+blocked there by an application control policy. Rather than quote figures nobody had computed, I
+re-implemented the model independently in JavaScript, working from the module docstrings rather
+than translating the code line by line, and used that to produce every number in this note.
+
+The second implementation reproduces the deterministic 43.9\% exactly. It is committed as
+\texttt{tools/verify\_model.js} so the two can be compared. Continuous integration runs the
+Python test suite, 83 tests, on Python 3.11, 3.12 and 3.13.
+
+\section{What this is not}
+
+This is a screening tool and a piece of coursework, not a design tool. It does not model
+cover, cement designations, intended working life, aggregate size, admixtures, workability,
+pumpability, shrinkage, creep or carbonation. Its durability limits are BS~8500-\emph{style}
+rather than a transcription of the standard. No number in it should be used for a real mix
+without trial mixes and a chartered engineer.
+
+The honest position after doing this work is that the tool is good at asking which direction to
+go and bad at saying how far. That is still useful, as long as it is the claim being made.
+
+\vspace{1em}
+\hrule
+\vspace{0.6em}
+{\small All figures reproducible: \texttt{node tools/verify\_model.js}, or
+\texttt{python -m carbonmix -{}-class C32/40 -{}-exposure XC3\_XC4 -{}-sensitivity 400}.}
+
+\end{document}
